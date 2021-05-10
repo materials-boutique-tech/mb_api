@@ -19,22 +19,30 @@ def month_range(month, year):
   return [start, end]
 
 
-def reward_time_ranges(start_date):
+def start_current_month():
+  today = datetime.utcnow()
+  _start_cur_month, _ = month_range(today.month, today.year)
+  return _start_cur_month
+
+
+def reward_time_ranges(hs_transfer_date):
   ranges = []
+  _start_current_month = start_current_month()
 
-  # start of first bin is the last_transferred_date for the hotspot
-  first_bin_start = start_date
-  _, first_bin_end = month_range(first_bin_start.month, first_bin_start.year)
-  ranges.append([first_bin_start, first_bin_end])
+  # generate invoice for each month, ending with the last complete month
+  # (no invoice is generated for the current month)
+  if hs_transfer_date.month < _start_current_month.month:
+    first_bin_start = hs_transfer_date
 
-  today = datetime.now()
-  start_current_month, _ = month_range(today.month, today.year)
-  last_bin_end = first_bin_end
+    _, first_bin_end = month_range(first_bin_start.month, first_bin_start.year)
+    ranges.append([first_bin_start, first_bin_end])
 
-  while last_bin_end < start_current_month:
-    start, end = month_range(last_bin_end.month, last_bin_end.year)
-    ranges.append([start, end])
-    last_bin_end = end
+    last_bin_end = first_bin_end
+
+    while last_bin_end < _start_current_month:
+      start, end = month_range(last_bin_end.month, last_bin_end.year)
+      ranges.append([start, end])
+      last_bin_end = end
 
   return ranges
 
@@ -44,44 +52,60 @@ def generate_invoices():
     for hotspot in host.hotspots:
       generate_invoices_for_hotspot(hotspot, host)
 
+def other_rewards_api_call(hotspot, range_start, range_end):
+  path = "https://api.helium.io/v1/hotspots/{}/rewards?min_time={}&max_time={}"
+  path = path.format(hotspot.net_add, range_start.isoformat(), range_end.isoformat())
+  print(path)
+  response = requests.get(path)
+  cursor = json.loads(response.content)['cursor']
+  if cursor:
+    response = requests.get(path+'&cursor={}'.format(cursor))
+    print("AFTER CURSOR", response)
+    total = 0
+    json.loads(response.content)['data']
+    for x in json.loads(response.content)['data']:
+      # print('x looks like',x)
+      total+=x['amount']
+    # print("{} amount {} for start date {} ".format(hotspot.serialize()['name'], total, range_start))
+    return total
+
 
 def helium_rewards_api_call(hotspot, range_start, range_end):
   path = "https://api.helium.io/v1/hotspots/{}/rewards/sum?min_time={}&max_time={}"
   path = path.format(hotspot.net_add, range_start.isoformat(), range_end.isoformat())
+  # print("the path", path)
   response = requests.get(path)
   return json.loads(response.content)
 
 
-# TODO: check that invoice doesn't exist for hotspot/start-date before creating one
 def generate_invoices_for_hotspot(hotspot, host):
   rewards_start_date = hotspot.serialize()['last_transferred']
   ranges = reward_time_ranges(rewards_start_date)
-  print('\n\n the ranges look like')
+
   for r in ranges:
-    response = helium_rewards_api_call(hotspot, r[0], r[1])
-    hnt_mined_in_range = response['data']['total']
-    if hnt_mined_in_range > 0:
-      create_invoice(hotspot, host, r[0], r[1], hnt_mined_in_range)
-
-    print("the total for {}".format(r[0].strftime("%m/%Y")), hnt_mined_in_range)
+    create_invoice(hotspot, host, r[0], r[1])
+    # print("the total for {}".format(r[0].strftime("%m/%d/%Y, %H:%M:%S"),r[1].strftime("%m/%d/%Y, %H:%M:%S")))
 
 
-def create_invoice(hotspot, host, start_date, end_date, hnt_amount):
+def create_invoice(hotspot, host, start_date, end_date):
   hotspot_id = hotspot.serialize()['id']
-  hotspot_name = hotspot.serialize()['name']
 
+  # make sure an invoice does not exist for the same hotspot in the same period
   if Invoice.query.filter_by(hotspot_id=hotspot_id, start_date=start_date).first():
       return
+  other_rewards_api_call(hotspot, start_date, end_date)
+  response = helium_rewards_api_call(hotspot, start_date, end_date)
+  hnt_mined_in_range = response['data']['total']
+  hnt_owed = hnt_mined_in_range * (host.reward_percentage/100)
 
   db.session.add(
     Invoice(hotspot_id=hotspot_id,
-            hotspot_name=hotspot_name,
             host_id=host.serialize()['id'],
-            host_first_name=host.serialize()['first_name'],
-            host_last_name=host.serialize()['last_name'],
-            host_email=host.serialize()['email'],
             start_date=start_date,
             end_date=end_date,
-            hnt_amount=hnt_amount
+            hnt_mined=hnt_mined_in_range,
+            hnt_owed=hnt_owed,
+            host_reward_percentage=host.reward_percentage # record this as it could change in the future
             ))
+
   db.session.commit()

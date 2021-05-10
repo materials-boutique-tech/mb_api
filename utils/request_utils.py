@@ -15,3 +15,7 @@ class Serializer(object):
 # http error handlers
 def not_authorized_401(e):
   return Response('not authorized', status=401, mimetype='application/json')
+
+def already_exist_error(table_name):
+  return Response('{} with the provided email already exists'.format(table_name), status=401,
+           mimetype='application/json')
