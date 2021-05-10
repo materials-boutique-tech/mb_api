@@ -23,7 +23,7 @@ def start_current_month():
   today = datetime.utcnow()
   _start_cur_month, _ = month_range(today.month, today.year)
   return _start_cur_month
-
+  
 
 def reward_time_ranges(hs_transfer_date):
   ranges = []
@@ -81,6 +81,8 @@ def helium_rewards_api_call(hotspot, range_start, range_end):
 def generate_invoices_for_hotspot(hotspot, host):
   rewards_start_date = hotspot.serialize()['last_transferred']
   ranges = reward_time_ranges(rewards_start_date)
+
+  print("THE RANGES LOOK >IKE", ranges)
 
   for r in ranges:
     create_invoice(hotspot, host, r[0], r[1])

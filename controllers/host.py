@@ -104,6 +104,8 @@ def index():
 
 
 # helpers
+# TODO: check that no invoice record exists for hotspot with date after transfer date?
+# tho we do already check for existing invoice with hotspot name and startdate
 def assign_hotspots_to_host(_host, data):
   if 'hotspots' in data:
     for hotspot_id in data['hotspots']:
