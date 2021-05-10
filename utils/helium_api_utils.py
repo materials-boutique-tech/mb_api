@@ -23,7 +23,7 @@ def start_current_month():
   today = datetime.utcnow()
   _start_cur_month, _ = month_range(today.month, today.year)
   return _start_cur_month
-  
+
 
 def reward_time_ranges(hs_transfer_date):
   ranges = []
@@ -95,11 +95,11 @@ def create_invoice(hotspot, host, start_date, end_date):
   # make sure an invoice does not exist for the same hotspot in the same period
   if Invoice.query.filter_by(hotspot_id=hotspot_id, start_date=start_date).first():
       return
-  other_rewards_api_call(hotspot, start_date, end_date)
+  # other_rewards_api_call(hotspot, start_date, end_date)
   response = helium_rewards_api_call(hotspot, start_date, end_date)
   hnt_mined_in_range = response['data']['total']
   hnt_owed = hnt_mined_in_range * (host.reward_percentage/100)
-
+  print("IN CREATE INVOICE", start_date, end_date)
   db.session.add(
     Invoice(hotspot_id=hotspot_id,
             host_id=host.serialize()['id'],
