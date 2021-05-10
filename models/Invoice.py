@@ -9,8 +9,8 @@ from models.Host import Host
 class Invoice(CoreMixin, Serializer, db.Model):
   hotspot_id = db.Column(UUID(as_uuid=True), db.ForeignKey('hotspot.id'), nullable=False)
   host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'), nullable=False)
-  start_date = db.Column(db.DateTime(timezone=True), nullable=False)
-  end_date = db.Column(db.DateTime(timezone=True), nullable=False)
+  start_date = db.Column(db.DateTime, nullable=False)
+  end_date = db.Column(db.DateTime, nullable=False)
   hnt_mined = db.Column(db.Float, nullable=False)
   hnt_owed = db.Column(db.Float, nullable=False)
   host_reward_percentage = db.Column(db.Integer, nullable=False)
