@@ -3,7 +3,7 @@ import os
 from flask import Blueprint, Response,send_file, send_from_directory
 from flask_login import login_required
 from seed.seed import seed_users, seed_hosts, seed_hotspots
-from config import APP_STATIC
+from utils.path_utils import APP_STATIC
 main = Blueprint('main', __name__)
 
 
