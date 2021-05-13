@@ -1,11 +1,14 @@
+from datetime import datetime
+
 from flask import Blueprint, Response, request, jsonify
 from flask_login import login_required
+
 from db import db
-from models.Hotspot import Hotspot
 from models.Host import Host
-from utils.request_utils import Serializer
+from models.Hotspot import Hotspot
 from utils.helium_api_utils import create_invoice, start_current_month
-from datetime import datetime
+from utils.request_utils import Serializer
+
 hotspot = Blueprint('hotspot', __name__)
 
 
@@ -66,13 +69,21 @@ def remove_hotspot_host():
   host_id = request.json['host_id']
   _hotspot = Hotspot.query.get(request.json['hotspot_id'])
 
-
-  if str(_hotspot.host_id) == host_id: # make sure they have the correct host
-    host = Host.query.get(host_id)
-    create_invoice(_hotspot, host, start_current_month(), datetime.utcnow())
-
+  if str(_hotspot.host_id) == host_id:  # make sure they have the correct host
     _hotspot.host_id = None
+    host = Host.query.get(host_id)
     db.session.commit()
+
+    # the invoice generation running on scheduler stops at end of prev month so
+    # when removing we create the partial invoice for the current month
+    last_txd = _hotspot.serialize()['last_transferred']
+    now = datetime.utcnow()
+
+    if last_txd.month == now.month and last_txd.year == now.year and last_txd.day == now.day:
+      return Response('hotspot removed from host; hotspot was assigned within 24 hours of being removed - no invoice generated',
+                      status=200, mimetype='application/json')
+
+    create_invoice(_hotspot, host, start_current_month(), now)
     return Response('hotspot removed from host', status=200, mimetype='application/json')
 
   return Response('the specified hotspot has a different host', status=400, mimetype='application/json')
