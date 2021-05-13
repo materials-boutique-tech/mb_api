@@ -1,11 +1,10 @@
-from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID
 import datetime
-
 import uuid
+from sqlalchemy.dialects.postgresql import UUID
 from db import db
 
 
+# fields we want on all of our models
 class CoreMixin(object):
   id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
   created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)

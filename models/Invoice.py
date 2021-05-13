@@ -1,9 +1,9 @@
-from db import db
-from utils.request_utils import Serializer
-from models.mixins.CoreMixin import CoreMixin
 from sqlalchemy.dialects.postgresql import UUID
-from models.Hotspot import Hotspot
+from db import db
 from models.Host import Host
+from models.Hotspot import Hotspot
+from models.mixins.CoreMixin import CoreMixin
+from utils.request_utils import Serializer
 
 
 class Invoice(CoreMixin, Serializer, db.Model):
@@ -15,6 +15,8 @@ class Invoice(CoreMixin, Serializer, db.Model):
   hnt_owed = db.Column(db.Float, nullable=False)
   host_reward_percentage = db.Column(db.Integer, nullable=False)
   paid = db.Column(db.Boolean, default=False, nullable=False)
+  paid_at = db.Column(db.DateTime)
+  payment_method = db.Column(db.String(100))
   paid_from_hnt_wallet = db.Column(db.String(100))
   paid_to_hnt_wallet = db.Column(db.String(100))
 

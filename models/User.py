@@ -1,7 +1,7 @@
-from db import db
-from utils.request_utils import Serializer
 from flask_login import UserMixin
+from db import db
 from models.mixins.CoreMixin import CoreMixin
+from utils.request_utils import Serializer
 
 
 class User(UserMixin, CoreMixin, Serializer, db.Model):
@@ -9,6 +9,3 @@ class User(UserMixin, CoreMixin, Serializer, db.Model):
   password = db.Column(db.String(100), nullable=False)
   first_name = db.Column(db.String(80), nullable=False)
   last_name = db.Column(db.String(120), nullable=False)
-
-  def __repr__(self):
-    return 'User: {}, {}, {}'.format(self.last_name, self.first_name, self.email)

@@ -46,8 +46,17 @@ def reward_time_ranges(hs_transfer_date):
 
   return ranges
 
+# the job run by the scheduler to generate invoices on a regular interval
+def generate_invoices_job(__app):
+  def job():
+    with __app.app_context():
+      generate_invoices()
+  return job
+
 
 def generate_invoices():
+  print("generate invoices begin")
+
   for host in Host.query.all():
     for hotspot in host.hotspots:
       generate_invoices_for_hotspot(hotspot, host)

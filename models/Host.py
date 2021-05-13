@@ -1,6 +1,10 @@
 from db import db
-from utils.request_utils import Serializer
 from models.mixins.CoreMixin import CoreMixin
+from utils.request_utils import Serializer
+
+# two options for how we compensate hosts
+HNT = 'hnt'
+FIAT = 'fiat'
 
 
 class Host(db.Model, CoreMixin, Serializer):
@@ -15,14 +19,9 @@ class Host(db.Model, CoreMixin, Serializer):
   hnt_wallet = db.Column(db.String(120))
   w9_received = db.Column(db.Boolean, server_default='false', nullable=False)
   reward_percentage = db.Column(db.Integer, server_default='50', nullable=False)
+  payment_method = db.Column(db.String(120), server_default=HNT, nullable=False)
   hotspots = db.relationship('Hotspot', backref='host', lazy=True)
   invoices = db.relationship('Invoice', backref='host', lazy=True)
-  # contract_version = db.Column(db.String(120), nullable=False, default="1.0.0")
-
-
-  def __repr__(self):
-    # TODO make this generic across models
-    return 'Host: {}'.format(self.id)
 
   def serialize(self):
     return {'first_name': self.first_name,
@@ -33,10 +32,11 @@ class Host(db.Model, CoreMixin, Serializer):
             'city': self.city,
             'state': self.state,
             'zip': self.zip,
-            'hnt_wallet':self.hnt_wallet,
+            'hnt_wallet': self.hnt_wallet,
             'hotspots': Serializer.serialize_list(self.hotspots),
             'hotspot_count': len(self.hotspots),
-            'w9_received':self.w9_received,
-            'reward_percentage':self.reward_percentage,
+            'w9_received': self.w9_received,
+            'reward_percentage': self.reward_percentage,
+            'payment_method': self.payment_method,
             'id': self.id
             }
