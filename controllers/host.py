@@ -16,7 +16,7 @@ host = Blueprint('host', __name__)
 @host.route('/signup', methods=['POST'])
 def signup_host():
   data = request.json
-  if check_already_exists(data): return already_exist_error('host')
+  if check_email_in_use(data): return already_exist_error('host', 'email')
 
   # noinspection PyArgumentList
   new_host = Host(email=data['email'],
@@ -41,7 +41,7 @@ def signup_host():
 @login_required
 def add_host():
   data = request.json
-  if check_already_exists(data): return already_exist_error('host')
+  if check_email_in_use(data): return already_exist_error('host', 'email')
 
   # noinspection PyArgumentList
   new_host = Host(email=data['email'],
@@ -68,7 +68,7 @@ def add_host():
 @login_required
 def update_host():
   data = request.json
-  _host = Host.query.filter_by(email=data['email']).first()
+  _host = Host.query.get(data['id'])
 
   _host.email = data['email'],
   _host.first_name = data['first_name']
@@ -122,5 +122,5 @@ def assign_hotspots_to_host(_host, data):
       _host.hotspots.append(hs)
 
 
-def check_already_exists(data):
-  Host.query.filter_by(email=data['email']).first()
+def check_email_in_use(data):
+  return Host.query.filter_by(email=data['email']).first()

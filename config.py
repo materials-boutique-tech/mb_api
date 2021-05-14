@@ -8,6 +8,7 @@ class DefaultConfig(object):
   SESSION_COOKIE_SAMESITE = 'None'
   SESSION_COOKIE_SECURE = True
   SESSION_COOKIE_HTTPONLY = True
+  CORS_EXPOSE_HEADERS = ['Set-Cookie', 'Access-Control-Allow-Headers', 'Cookie']
 
 class ProductionConfig(DefaultConfig):
   DEBUG = False

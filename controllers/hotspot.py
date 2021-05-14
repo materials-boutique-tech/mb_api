@@ -11,30 +11,43 @@ from utils.request_utils import Serializer
 
 hotspot = Blueprint('hotspot', __name__)
 
+def validate_unique(data):
+  if Hotspot.query.filter_by(name=data['name']).first(): return False
+  return not Hotspot.query.filter_by(net_add=data['net_add']).first()
 
+
+# route for adding a hotspot
 @hotspot.route('/add', methods=['POST'])
 @login_required
 def add_hotspot():
   data = request.json
 
-  already_exists = Hotspot.query.filter_by(name=data['name']).first()
-
-  if already_exists:
-    return Response('hotspot with the provided name already exists', status=401,
+  if not validate_unique(data):
+    return Response('hotspot with the provided name or net address already exists', status=400,
                     mimetype='application/json')
 
-  db.session.add(Hotspot(email=data['email'],
-                         first_name=data['first_name'],
-                         last_name=data['last_name'],
-                         phone=data['phone'],
-                         street=data['street'],
-                         city=data['city'],
-                         state=data['state'],
-                         zip=data['zip'],
-                         hnt_wallet=data['hnt_wallet']))
+  db.session.add(Hotspot(net_add=data['net_add'],
+                         name=data['name'],
+                         model=data['model']
+                         ))
   db.session.commit()
 
   return Response('hotspot created', status=201, mimetype='application/json')
+
+
+# route for updating a hotspot
+@hotspot.route('/update', methods=['POST'])
+@login_required
+def update_hotspot():
+  data = request.json
+  _hotspot = Hotspot.query.get(data['id'])
+  _hotspot.name = data['name'].lower(),
+  _hotspot.net_add = data['net_add']
+  _hotspot.model = data['model']
+
+  db.session.commit()
+
+  return Response('hotspot updated', status=200, mimetype='application/json')
 
 
 # returns all hotspots
@@ -49,7 +62,6 @@ def index():
 @hotspot.route('/unassigned', methods=['GET'])
 @login_required
 def hotspots_without_host():
-  # time.sleep(3)
   _hotspots = Hotspot.query.filter_by(host_id=None)
   return jsonify(Serializer.serialize_list(_hotspots))
 
@@ -79,7 +91,6 @@ def remove_hotspot_host():
     # the invoice generation running on scheduler stops at end of prev month so
     # when removing we create the partial invoice for the current month
     last_txd = _hotspot.serialize()['last_transferred']
-    print("\n\n LOOKS LIKE, ", last_txd)
     now = datetime.utcnow()
 
     same_month_and_year = last_txd.month == now.month and last_txd.year == now.year
@@ -103,3 +114,12 @@ def remove_hotspot_host():
     return success_res
 
   return Response('the specified hotspot has a different host', status=400, mimetype='application/json')
+
+
+# admin route for getting a single hotspot
+@hotspot.route('/hotspot', methods=['GET'])
+@login_required
+def get_host():
+  return Hotspot.query.get(request.args.get('hotspot_id')).serialize()
+
+
