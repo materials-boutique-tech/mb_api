@@ -74,16 +74,32 @@ def remove_hotspot_host():
     host = Host.query.get(host_id)
     db.session.commit()
 
+    success_res = Response('hotspot removed from host', status=200, mimetype='application/json')
+
     # the invoice generation running on scheduler stops at end of prev month so
     # when removing we create the partial invoice for the current month
     last_txd = _hotspot.serialize()['last_transferred']
+    print("\n\n LOOKS LIKE, ", last_txd)
     now = datetime.utcnow()
 
-    if last_txd.month == now.month and last_txd.year == now.year and last_txd.day == now.day:
-      return Response('hotspot removed from host; hotspot was assigned within 24 hours of being removed - no invoice generated',
-                      status=200, mimetype='application/json')
+    same_month_and_year = last_txd.month == now.month and last_txd.year == now.year
 
+    # need to handle case when the hotspot was transferred to host and removed from
+    # that host within the same month
+    if same_month_and_year:
+      # if transferred and removed on the same day do not generate invoice
+      if last_txd.day == now.day:
+        return Response(
+          'hotspot removed from host; hotspot was assigned within 24 hours of being removed - no invoice generated',
+          status=200, mimetype='application/json')
+
+      # if it was transferred in the current month transfer date is the start_date of the invoice
+      create_invoice(_hotspot, host, last_txd, now)
+      return success_res
+
+    # otherwise it was transferred in a prev month and the start_range for the invoice
+    # is the start of the current month
     create_invoice(_hotspot, host, start_current_month(), now)
-    return Response('hotspot removed from host', status=200, mimetype='application/json')
+    return success_res
 
   return Response('the specified hotspot has a different host', status=400, mimetype='application/json')
