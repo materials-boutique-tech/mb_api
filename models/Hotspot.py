@@ -23,10 +23,6 @@ class Hotspot(CoreMixin, Serializer, db.Model):
     'last_transferred': [date_string_format, type_string],
   }
 
-  def fmt_last_txd(self):
-    if (self.last_transferred):
-      return datetime.datetime.strftime(self.last_transferred, "%m/%d/%y")
-
   def serialize(self):
     return {'name': self.name,
             'id': self.id,
@@ -34,5 +30,5 @@ class Hotspot(CoreMixin, Serializer, db.Model):
             'model': self.model,
             'host_email': self.host.email if self.host else 'none',
             'host_city': self.host.city if self.host else 'none',
-            'last_transferred': self.fmt_last_txd()
+            'last_transferred': self.last_transferred
             }

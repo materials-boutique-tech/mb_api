@@ -133,7 +133,7 @@ def assign_hotspots_to_host(_host, data):
       if "transfer_date" in data:
         if date_string_format("transfer_date", data):
           return form_submission_error('transfer date should be in format mm/dd/yy')
-        hs.last_transferred = datetime.datetime.strptime(data['transfer_date'], '%m/%d/%y')
+        hs.last_transferred = data['transfer_date']
       else:
         hs.last_transferred = start_day(datetime.datetime.utcnow())
       _host.hotspots.append(hs)

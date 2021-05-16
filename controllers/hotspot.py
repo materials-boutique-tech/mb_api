@@ -97,7 +97,7 @@ def remove_hotspot_host():
 
     # the invoice generation running on scheduler stops at end of prev month so
     # when removing we create the partial invoice for the current month
-    last_txd = datetime.strptime(_hotspot.serialize()['last_transferred'], '%m/%d/%y')
+    last_txd = _hotspot.serialize()['last_transferred']
     now = datetime.utcnow()
 
     same_month_and_year = last_txd.month == now.month and last_txd.year == now.year

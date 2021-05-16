@@ -70,7 +70,7 @@ def helium_rewards_api_call(hotspot, range_start, range_end):
 
 
 def generate_invoices_for_hotspot(hotspot, host):
-  rewards_start_date = datetime.strptime(hotspot.serialize()['last_transferred'], '%m/%d/%y')
+  rewards_start_date = hotspot.serialize()['last_transferred']
   ranges = invoice_ranges_for_hotspot(rewards_start_date)
 
   for r in ranges:
