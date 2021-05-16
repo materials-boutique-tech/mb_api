@@ -1,8 +1,8 @@
-from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
-from seed.seed import seed_all
+from flask_script import Manager
 
 from app import app, db
+from seed.seed import seed_all
 
 migrate = Migrate(app, db)
 manager = Manager(app)

@@ -1,10 +1,11 @@
 from flask import Blueprint, Response, request, jsonify
-from flask_login import login_user, login_required, logout_user
-from models.User import User
-from werkzeug.security import generate_password_hash, check_password_hash
-from utils.request_utils import Serializer
-from db import db
 from flask_login import current_user
+from flask_login import login_user, login_required, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from db import db
+from models.User import User
+from utils.request_utils import Serializer
 
 auth = Blueprint('auth', __name__)
 

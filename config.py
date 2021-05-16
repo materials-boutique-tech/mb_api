@@ -1,5 +1,6 @@
 import os
 
+
 class DefaultConfig(object):
   DEBUG = False
   SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace("s://", "sql://", 1)
@@ -9,6 +10,7 @@ class DefaultConfig(object):
   SESSION_COOKIE_SECURE = True
   SESSION_COOKIE_HTTPONLY = True
   CORS_EXPOSE_HEADERS = ['Set-Cookie', 'Access-Control-Allow-Headers', 'Cookie']
+
 
 class ProductionConfig(DefaultConfig):
   DEBUG = False

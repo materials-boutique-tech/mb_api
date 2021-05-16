@@ -1,12 +1,15 @@
+import datetime
+
 from flask import Blueprint, Response, request, jsonify
-from models.Hotspot import Hotspot
 from flask_login import login_required
+
 from db import db
 from models.Host import Host
-from utils.request_utils import already_exist_error
-import datetime
+from models.Hotspot import Hotspot
 from utils.helium_api_utils import start_day
-from utils.request_utils import Serializer
+from utils.request_utils import Serializer, form_submission_error
+from utils.request_utils import already_exist_error
+from utils.validation_utils import date_string_format, validate
 
 host = Blueprint('host', __name__)
 
@@ -17,6 +20,9 @@ host = Blueprint('host', __name__)
 def signup_host():
   data = request.json
   if check_email_in_use(data): return already_exist_error('host', 'email')
+
+  valid, err_msg = validate(data, Host.validation)
+  if not valid: return form_submission_error(err_msg)
 
   # noinspection PyArgumentList
   new_host = Host(email=data['email'],
@@ -36,12 +42,15 @@ def signup_host():
 
 
 # admin route for adding a host (includes w9 status and option to assign hotspots)
-# TODO: how to address t&c when an admin adds host
+# TODO: how to address t&c when an admin adds host?
 @host.route('/add', methods=['POST'])
 @login_required
 def add_host():
   data = request.json
   if check_email_in_use(data): return already_exist_error('host', 'email')
+
+  valid, err_msg = validate(data, Host.validation)
+  if not valid: return form_submission_error(err_msg)
 
   # noinspection PyArgumentList
   new_host = Host(email=data['email'],
@@ -68,6 +77,10 @@ def add_host():
 @login_required
 def update_host():
   data = request.json
+
+  valid, err_msg = validate(data, Host.validation)
+  if not valid: return form_submission_error(err_msg)
+
   _host = Host.query.get(data['id'])
 
   _host.email = data['email'],
@@ -80,9 +93,11 @@ def update_host():
   _host.zip = data['zip']
   _host.hnt_wallet = data['hnt_wallet']
   _host.w9_received = data['w9_received']
-  _host.reward_percentage = data['reward_percentage'] # changes apply to entire month
+  _host.reward_percentage = data['reward_percentage']  # changes apply to entire month
 
-  assign_hotspots_to_host(_host, data)
+  err = assign_hotspots_to_host(_host, data)
+  if err: return err
+
   db.session.commit()
 
   return Response('host updated', status=200, mimetype='application/json')
@@ -116,10 +131,13 @@ def assign_hotspots_to_host(_host, data):
                         mimetype='application/json')
 
       if "transfer_date" in data:
-        hs.last_transferred = data['transfer_date']
+        if date_string_format("transfer_date", data):
+          return form_submission_error('transfer date should be in format mm/dd/yy')
+        hs.last_transferred = datetime.datetime.strptime(data['transfer_date'], '%m/%d/%y')
       else:
         hs.last_transferred = start_day(datetime.datetime.utcnow())
       _host.hotspots.append(hs)
+  return None
 
 
 def check_email_in_use(data):

@@ -1,7 +1,9 @@
 import json
 from datetime import datetime, date, time
+
 import requests
 from dateutil.relativedelta import relativedelta
+
 from db import db
 from models.Host import Host
 from models.Invoice import Invoice

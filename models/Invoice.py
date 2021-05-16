@@ -1,4 +1,5 @@
 from sqlalchemy.dialects.postgresql import UUID
+
 from db import db
 from models.Host import Host
 from models.Hotspot import Hotspot

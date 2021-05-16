@@ -1,5 +1,6 @@
 from flask import Blueprint, Response
 from flask_login import login_required
+
 from seed.seed import seed_users, seed_hosts, seed_hotspots
 
 main = Blueprint('main', __name__)

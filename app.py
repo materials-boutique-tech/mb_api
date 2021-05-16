@@ -1,20 +1,22 @@
+import os
+
+from dotenv import load_dotenv
+from flask import Flask
+from flask_apscheduler import APScheduler
+from flask_cors import CORS
+from flask_login import LoginManager
+
 from controllers.auth import auth
-from controllers.main import main
 from controllers.host import host
 from controllers.hotspot import hotspot
 from controllers.invoice import invoice
-from utils.helium_api_utils import generate_invoices_job
-from flask import Flask
-from dotenv import load_dotenv
-from flask_login import LoginManager
-from models.User import User
-from flask_cors import CORS
+from controllers.main import main
 from db import db
-import os
-from utils.request_utils import not_authorized_401
-from seed.seed import seed_all
-from flask_apscheduler import APScheduler
+from models.User import User
+from utils.helium_api_utils import generate_invoices_job
 from utils.logging_utils import init_logger, info_log
+from utils.request_utils import not_authorized_401
+
 
 def create_app():
   load_dotenv()
@@ -35,7 +37,7 @@ def create_app():
   scheduler.add_job(id='invoice_task_id',
                     func=generate_invoices_job(_app),
                     trigger='interval',
-                    seconds=10) # TODO: change this to something less frequent
+                    seconds=30)  # TODO: change this to something less frequent
 
   # set up the user loader for flask_login
   @login_manager.user_loader
@@ -58,7 +60,7 @@ with app.app_context():
   db.init_app(app)
   # db.drop_all()
   db.create_all()
-  seed_all()
+  # seed_all()
 
 if __name__ == '__main__':
   app.run(port=5000)

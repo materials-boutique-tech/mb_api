@@ -1,6 +1,8 @@
 from db import db
 from models.mixins.CoreMixin import CoreMixin
 from utils.request_utils import Serializer
+from utils.validation_utils import type_name, type_email, type_phone, type_city_or_state, max_length, required_length, \
+  type_zip_code, one_of, type_bool, type_string, number_in_range
 
 # two options for how we compensate hosts
 HNT = 'hnt'
@@ -22,6 +24,21 @@ class Host(db.Model, CoreMixin, Serializer):
   payment_method = db.Column(db.String(120), server_default=HNT, nullable=False)
   hotspots = db.relationship('Hotspot', backref='host', lazy=True)
   invoices = db.relationship('Invoice', backref='host', lazy=True)
+
+  validation = {
+    'first_name': [type_name, type_string],
+    'last_name': [type_name, type_string],
+    'email': [type_email, type_string],
+    'phone': [type_phone, type_string],
+    'street': [max_length(120), type_string],
+    'city': [type_city_or_state, type_string],
+    'state': [type_city_or_state, type_string],
+    'zip': [type_zip_code, type_string],
+    'hnt_wallet': [required_length(51), type_string],
+    'w9_received': [type_bool],
+    'reward_percentage': [number_in_range(1, 100)],
+    'payment_method': [one_of([HNT, FIAT]), type_string],
+  }
 
   def serialize(self):
     return {'first_name': self.first_name,

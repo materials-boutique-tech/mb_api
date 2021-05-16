@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+
 from db import db
 from models.mixins.CoreMixin import CoreMixin
 from utils.request_utils import Serializer

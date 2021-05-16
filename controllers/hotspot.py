@@ -7,9 +7,11 @@ from db import db
 from models.Host import Host
 from models.Hotspot import Hotspot
 from utils.helium_api_utils import create_invoice, start_current_month
-from utils.request_utils import Serializer
+from utils.request_utils import Serializer, form_submission_error
+from utils.validation_utils import validate
 
 hotspot = Blueprint('hotspot', __name__)
+
 
 def validate_unique(data):
   if Hotspot.query.filter_by(name=data['name']).first(): return False
@@ -21,6 +23,8 @@ def validate_unique(data):
 @login_required
 def add_hotspot():
   data = request.json
+  valid, err_msg = validate(data, Hotspot.validation)
+  if not valid: return form_submission_error(err_msg)
 
   if not validate_unique(data):
     return Response('hotspot with the provided name or net address already exists', status=400,
@@ -40,6 +44,9 @@ def add_hotspot():
 @login_required
 def update_hotspot():
   data = request.json
+  valid, err_msg = validate(data, Hotspot.validation)
+  if not valid: return form_submission_error(err_msg)
+
   _hotspot = Hotspot.query.get(data['id'])
   _hotspot.name = data['name'].lower(),
   _hotspot.net_add = data['net_add']
@@ -121,5 +128,3 @@ def remove_hotspot_host():
 @login_required
 def get_host():
   return Hotspot.query.get(request.args.get('hotspot_id')).serialize()
-
-
