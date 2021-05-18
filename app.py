@@ -16,6 +16,7 @@ from models.User import User
 from utils.helium_api_utils import generate_invoices_job
 from utils.logging_utils import init_logger, info_log
 from utils.request_utils import not_authorized_401
+from seed.seed import seed_all
 
 
 def create_app():
@@ -58,9 +59,9 @@ app.register_error_handler(401, not_authorized_401)
 
 with app.app_context():
   db.init_app(app)
-  # db.drop_all()
+  db.drop_all()
   db.create_all()
-  # seed_all()
+  seed_all()
 
 if __name__ == '__main__':
   app.run(port=5000)

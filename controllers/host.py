@@ -4,7 +4,7 @@ from flask import Blueprint, Response, request, jsonify
 from flask_login import login_required
 
 from db import db
-from models.Host import Host
+from models.Host import Host, HNT, BANK_ACCOUNT, VENMO
 from models.Hotspot import Hotspot
 from utils.helium_api_utils import start_day
 from utils.request_utils import Serializer, form_submission_error
@@ -33,7 +33,9 @@ def signup_host():
                   city=data['city'],
                   state=data['state'],
                   zip=data['zip'],
-                  hnt_wallet=data['hnt_wallet'])
+                  payment_method=data['payment_method'])
+
+  update_host_payment_details(new_host, data)
 
   db.session.add(new_host)
   db.session.commit()
@@ -61,10 +63,13 @@ def add_host():
                   city=data['city'],
                   state=data['state'],
                   zip=data['zip'],
-                  hnt_wallet=data['hnt_wallet'],
-                  reward_percentage=data['reward_percentage'])
+                  reward_percentage=data['reward_percentage'],
+                  w9_received=data['w9_received'],
+                  payment_method=data['payment_method'])
 
-  assign_hotspots_to_host(new_host, data)
+  update_host_payment_details(new_host, data)
+  err = assign_hotspots_to_host(new_host, data)
+  if err: return err
 
   db.session.add(new_host)
   db.session.commit()
@@ -91,10 +96,11 @@ def update_host():
   _host.city = data['city']
   _host.state = data['state']
   _host.zip = data['zip']
-  _host.hnt_wallet = data['hnt_wallet']
   _host.w9_received = data['w9_received']
   _host.reward_percentage = data['reward_percentage']  # changes apply to entire month
+  _host.payment_method = data['payment_method']  # changes apply to entire month
 
+  update_host_payment_details(_host, data)
   err = assign_hotspots_to_host(_host, data)
   if err: return err
 
@@ -138,6 +144,19 @@ def assign_hotspots_to_host(_host, data):
         hs.last_transferred = start_day(datetime.datetime.utcnow())
       _host.hotspots.append(hs)
   return None
+
+
+def update_host_payment_details(_host, data):
+  method = data['payment_method']
+
+  if method == HNT:
+    _host.hnt_wallet = data['hnt_wallet']
+  if method == BANK_ACCOUNT:
+    _host.bank_account_number = data['bank_account_number']
+    _host.bank_routing_number = data['bank_routing_number']
+  if method == VENMO:
+    _host.venmo_handle = data['venmo_handle']
+
 
 
 def check_email_in_use(data):

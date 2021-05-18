@@ -6,7 +6,8 @@ from utils.validation_utils import type_name, type_email, type_phone, type_city_
 
 # two options for how we compensate hosts
 HNT = 'hnt'
-FIAT = 'fiat'
+BANK_ACCOUNT = 'bank_account'
+VENMO = 'venmo'
 
 
 class Host(db.Model, CoreMixin, Serializer):
@@ -18,6 +19,9 @@ class Host(db.Model, CoreMixin, Serializer):
   city = db.Column(db.String(120), nullable=False)
   state = db.Column(db.String(120), nullable=False)
   zip = db.Column(db.String(120), nullable=False)
+  bank_account_number = db.Column(db.String(120))
+  bank_routing_number = db.Column(db.String(120))
+  venmo_handle = db.Column(db.String(120))
   hnt_wallet = db.Column(db.String(120))
   w9_received = db.Column(db.Boolean, server_default='false', nullable=False)
   reward_percentage = db.Column(db.Integer, server_default='50', nullable=False)
@@ -37,7 +41,10 @@ class Host(db.Model, CoreMixin, Serializer):
     'hnt_wallet': [required_length(51), type_string],
     'w9_received': [type_bool],
     'reward_percentage': [number_in_range(1, 100)],
-    'payment_method': [one_of([HNT, FIAT]), type_string],
+    'payment_method': [one_of([HNT, BANK_ACCOUNT, VENMO]), type_string],
+    'bank_account_number': [type_string],
+    'bank_routing_number': [type_string],
+    'venmo_handle': [type_string],
   }
 
   def serialize(self):
@@ -55,5 +62,8 @@ class Host(db.Model, CoreMixin, Serializer):
             'w9_received': self.w9_received,
             'reward_percentage': self.reward_percentage,
             'payment_method': self.payment_method,
+            'bank_account_number': self.bank_account_number,
+            'bank_routing_number': self.bank_routing_number,
+            'venmo_handle': self.venmo_handle,
             'id': self.id
             }
