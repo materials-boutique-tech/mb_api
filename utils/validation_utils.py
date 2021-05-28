@@ -1,6 +1,9 @@
 import re
 
+from utils.api_error import FormError
 
+
+# validators used in model CRUD methods
 def validate(data, validation):
   errors = []
 
@@ -12,8 +15,7 @@ def validate(data, validation):
       err_msg = validator(field_name, data)
       if err_msg: errors.append(err_msg)
 
-  if len(errors): return False, ', '.join(errors)
-  return True, None
+  if len(errors): raise FormError(', '.join(errors))
 
 
 def min_length(min_len):
@@ -39,7 +41,7 @@ def number_in_range(_min, _max):
       return '{} is not a number'.format(field_name)
 
     val = int(data[field_name])
-    if (val < _min) or (val > _max): return '{} must be btw {} and {}'.format(field_name, _min, _max)
+    if (val < _min) or (val > _max): return '{} must be between {} and {}'.format(field_name, _min, _max)
 
   return nir
 
@@ -75,18 +77,19 @@ def type_bool(field_name, data):
     return "{} should be a bool".format(field_name)
 
 
+# TODO: validators using regex need to compare the fullmatch() to the value, not just check whether fullmatch() passes
 def date_string_format(field_name, data):
-  if not re.search('^\d{2}/\d{2}/\d{2}', data[field_name]):
+  if not re.fullmatch('^\d{2}/\d{2}/\d{2}', data[field_name]):
     return "{} should have format mm/dd/yy".format(field_name)
 
 
 def type_name(field_name, data):
-  if not re.search('^[a-zA-Z\s]+$', data[field_name]):
+  if not re.fullmatch('^[a-zA-Z\s]+$', data[field_name]):
     return "{} can only contain letters and spaces".format(field_name)
 
 
 def type_email(field_name, data):
-  if not re.search('^(\w|\.|_|-)+[@](\w|_|-|\.)+[.]\w{2,3}$', data[field_name]):
+  if not re.fullmatch('^(\w|\.|_|-)+[@](\w|_|-|\.)+[.]\w{2,3}$', data[field_name]):
     return "{} invalid".format(field_name)
 
 
@@ -97,15 +100,17 @@ def type_phone(field_name, data):
 
 
 def type_city_or_state(field_name, data):
-  if not re.search('^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$', data[field_name]):
+  if not re.fullmatch('^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$', data[field_name]):
     return "{} invalid".format(field_name)
 
 
 def type_zip_code(field_name, data):
-  if not re.search('^(\d{5})([- ])?(\d{4})?', data[field_name]):
+  if not re.fullmatch('^(\d{5})([- ])?(\d{4})?', data[field_name]):
     return "{} invalid".format(field_name)
 
 
 def type_hotspot_name(field_name, data):
-  if not re.search('^[a-z_]*$', data[field_name]):
-    return "{} invalid - should contain only letters and underscore".format(field_name)
+  if not re.fullmatch('^[a-z_]*$', data[field_name]):
+    return "{} invalid - should contain only lowercase letters and underscore".format(field_name)
+  if not len(re.findall('_', data[field_name])) == 2:
+    return "{} invalid - should contain three words separated by underscores".format(field_name)

@@ -20,7 +20,7 @@ def seed_users():
       # noinspection PyArgumentList
       new_user = User(email=user['email'], first_name=user['first_name'], last_name=user['last_name'],
                       password=generate_password_hash(user['password'], method='sha256'))
-      db.session.add(new_user)
+      db.session.make_new(new_user)
       db.session.commit()
 
 
@@ -48,7 +48,7 @@ def seed_hosts():
 
     if not existing:
       # noinspection PyArgumentList
-      db.session.add(Host(
+      db.session.make_new(Host(
         email=host['email'],
         first_name=host['first_name'],
         last_name=host['last_name'],
@@ -77,7 +77,7 @@ def seed_hotspots():
 
     if not existing:
       # noinspection PyArgumentList
-      db.session.add(Hotspot(
+      db.session.make_new(Hotspot(
         net_add=hotspot['net_add'],
         name=hotspot['name'],
         model=hotspot['model'],

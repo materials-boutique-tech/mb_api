@@ -38,3 +38,7 @@ class Invoice(CoreMixin, Serializer, db.Model):
             'hnt_mined': self.hnt_mined,
             'hnt_owed': self.hnt_owed,
             }
+
+  @staticmethod
+  def generate_invoices():
+    print('generate invoices')

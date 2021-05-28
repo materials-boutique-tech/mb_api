@@ -89,7 +89,7 @@ def create_invoice(hotspot, host, start_date, end_date):
   hnt_mined_in_range = response['data']['total']
   hnt_owed = hnt_mined_in_range * (host.reward_percentage / 100)
 
-  db.session.add(
+  db.session.make_new(
     Invoice(hotspot_id=hotspot_id,
             host_id=host.serialize()['id'],
             start_date=start_date,

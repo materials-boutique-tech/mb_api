@@ -1,26 +1,22 @@
-import datetime
-
-from sqlalchemy.dialects.postgresql import UUID
-
 from db import db
 from models.mixins.CoreMixin import CoreMixin
+from utils.api_error import FormError
 from utils.request_utils import Serializer
-from utils.validation_utils import min_length, required_length, date_string_format, type_string, type_hotspot_name
+from utils.validation_utils import min_length, required_length, type_hotspot_name
+from utils.validation_utils import validate
 
 
 class Hotspot(CoreMixin, Serializer, db.Model):
-  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
   net_add = db.Column(db.String(120), unique=True, nullable=False)
   model = db.Column(db.String(120), nullable=False)
   name = db.Column(db.String(100), unique=True, nullable=False)
-  last_transferred = db.Column(db.DateTime)
-  invoices = db.relationship('Invoice', backref='hotspot', lazy=True)
+  invoices = db.relationship('Invoice', backref='hotspot')
+  assignments = db.relationship('Assignment', backref='hotspot')
 
   validation = {
-    'net_add': [required_length(51), type_string],
-    'model': [min_length(3), type_string],
-    'name': [type_hotspot_name, min_length(15), type_string],
-    'last_transferred': [date_string_format, type_string],
+    'net_add': [required_length(51)],
+    'model': [min_length(3)],
+    'name': [type_hotspot_name, min_length(15)],
   }
 
   def serialize(self):
@@ -28,7 +24,44 @@ class Hotspot(CoreMixin, Serializer, db.Model):
             'id': self.id,
             'net_add': self.net_add,
             'model': self.model,
-            'host_email': self.host.email if self.host else 'none',
-            'host_city': self.host.city if self.host else 'none',
-            'last_transferred': self.last_transferred
             }
+
+  @staticmethod
+  def unassigned():
+    query = ('select * from hotspot where hotspot.id not in (select hotspot_id from hotspot inner join '
+             '(select *  from assignment where assignment.end_date is null) as hotspots_with_active_assignment '
+             'on hotspots_with_active_assignment.hotspot_id = hotspot.id);')
+    return db.session.execute(query)
+
+  @staticmethod
+  def validate_unique(data):
+    if Hotspot.query.filter_by(name=data['name']).first(): return False
+    return not Hotspot.query.filter_by(net_add=data['net_add']).first()
+
+  @staticmethod
+  def add(data):
+    validate(data, Hotspot.validation)
+
+    if not Hotspot.validate_unique(data):
+      raise FormError('hotspot with the provided name or net address already exists')
+
+    db.session.make_new(Hotspot(net_add=data['net_add'],
+                                name=data['name'],
+                                model=data['model']
+                                ))
+    db.session.commit()
+
+  @staticmethod
+  def update(data):
+    validate(data, Hotspot.validation)
+
+    _hotspot = Hotspot.query.get(data['id'])
+    _hotspot.name = data['name'].lower(),
+    _hotspot.net_add = data['net_add']
+    _hotspot.model = data['model']
+
+    db.session.commit()
+
+  @staticmethod
+  def all_hotspots():
+    return Hotspot.query.all()
