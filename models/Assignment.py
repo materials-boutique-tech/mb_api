@@ -82,7 +82,34 @@ class Assignment(db.Model, CoreMixin, Serializer):
     if 'supplement_received' in data:
       new_assignment.supplement_received = data['supplement_received']
 
-    db.session.make_new(new_assignment)
+    db.session.add(new_assignment)
+    db.session.commit()
+
+
+  def update(self, data):
+    Assignment.validate(data, Assignment.validation)
+    hotspot = Hotspot.query.get(data['hotspot_id'])
+    start_date = Assignment.format_date(data['start_date'])
+    Assignment.validate_start_date(hotspot, start_date)
+
+    # noinspection PyArgumentList
+    self.start_date=data['start_date']
+    self.host_reward_percentage=data['host_reward_percentage']
+    self.host_id=data['host_id'],
+    self.hotspot_id=data['hotspot_id']
+
+    # optional fields
+    if 'referer_id' in data:
+      if data['referer_id'] == data['host_id']:
+        raise FormError('host and referer cannot be the same person')
+      self.referer_id = data['referer_id']
+
+    if 'referer_reward_percentage' in data:
+      self.referer_reward_percentage = data['referer_reward_percentage']
+
+    if 'supplement_received' in data:
+      self.supplement_received = data['supplement_received']
+
     db.session.commit()
 
   @staticmethod

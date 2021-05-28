@@ -28,7 +28,7 @@ def get_host():
 @host.route('/signup', methods=['POST'])
 def signup_host():
   new_host = Host.make_new(request.json)
-  db.session.make_new(new_host)
+  db.session.add(new_host)
   db.session.commit()
   return Response('submit success', status=201, mimetype='application/json')
 
@@ -43,7 +43,7 @@ def add_host():
   if 'w9_received' in data:
     new_host.w9_received = data['w9_received']
 
-  db.session.make_new(new_host)
+  db.session.add(new_host)
   db.session.commit()
   return Response('Host {} {} created'.format(new_host.first_name, new_host.last_name),
                   status=201, mimetype='application/json')

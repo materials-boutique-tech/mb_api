@@ -41,7 +41,7 @@ def signup():
   new_user = User(email=email, first_name=first_name, last_name=last_name,
                   password=generate_password_hash(password, method='sha256'))
 
-  db.session.make_new(new_user)
+  db.session.add(new_user)
   db.session.commit()
   return Response('user created', status=201, mimetype='application/json')
 
