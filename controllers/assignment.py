@@ -46,3 +46,9 @@ def terminate_assignment():
 def add_assignment():
   Assignment.add(request.json)
   return Response('assignment created', status=201, mimetype='application/json')
+
+@assignment.route('/update', methods=['POST'])
+@login_required
+def update_assignment():
+  Assignment.update(request.json)
+  return Response('assignment updated', status=200, mimetype='application/json')

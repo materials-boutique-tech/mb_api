@@ -55,14 +55,24 @@ class Assignment(db.Model, CoreMixin, Serializer):
 
   @staticmethod
   def get_assignment(a_id):
-    return Assignment.query.get(a_id).serialize()
+    a = Assignment.query.get(a_id)
+    res = a.serialize()
+
+    res['hotspot_name'] = a.hotspot.name
+    res['hotspot_id'] = a.hotspot.id
+
+    res['host_label'] = "{} {} ({})".format(a.host.first_name, a.host.last_name, a.host.email)
+    res['host_id'] = a.host.id
+
+    if a.referer:
+      res['referer_label'] = "{} {} ({})".format(a.referer.first_name, a.referer.last_name, a.referer.email)
+      res['referer_id'] = a.referer.id
+    return res
 
   @staticmethod
   def add(data):
     validate(data, Assignment.validation)
-    hotspot = Hotspot.query.get(data['hotspot_id'])
-    start_date = Assignment.format_date(data['start_date'])
-    Assignment.validate_start_date(hotspot, start_date)
+    Assignment.validate_dates(data)
 
     # noinspection PyArgumentList
     new_assignment = Assignment(start_date=data['start_date'],
@@ -70,35 +80,29 @@ class Assignment(db.Model, CoreMixin, Serializer):
                                 host_id=data['host_id'],
                                 hotspot_id=data['hotspot_id'])
 
-    # optional fields
-    if 'referer_id' in data:
-      if data['referer_id'] == data['host_id']:
-        raise FormError('host and referer cannot be the same person')
-      new_assignment.referer_id = data['referer_id']
-
-    if 'referer_reward_percentage' in data:
-      new_assignment.referer_reward_percentage = data['referer_reward_percentage']
-
-    if 'supplement_received' in data:
-      new_assignment.supplement_received = data['supplement_received']
+    new_assignment.set_optional_fields(data)
 
     db.session.add(new_assignment)
     db.session.commit()
 
+  @staticmethod
+  def update(data):
+    assignment = Assignment.query.get(data['id'])
 
-  def update(self, data):
-    Assignment.validate(data, Assignment.validation)
-    hotspot = Hotspot.query.get(data['hotspot_id'])
-    start_date = Assignment.format_date(data['start_date'])
-    Assignment.validate_start_date(hotspot, start_date)
+    validate(data, Assignment.validation)
+    Assignment.validate_dates(data)
 
     # noinspection PyArgumentList
-    self.start_date=data['start_date']
-    self.host_reward_percentage=data['host_reward_percentage']
-    self.host_id=data['host_id'],
-    self.hotspot_id=data['hotspot_id']
+    assignment.start_date = data['start_date']
+    assignment.host_reward_percentage = data['host_reward_percentage']
+    assignment.host_id = data['host_id'],
+    assignment.hotspot_id = data['hotspot_id']
 
-    # optional fields
+    assignment.set_optional_fields(data)
+
+    db.session.commit()
+
+  def set_optional_fields(self, data):
     if 'referer_id' in data:
       if data['referer_id'] == data['host_id']:
         raise FormError('host and referer cannot be the same person')
@@ -110,31 +114,19 @@ class Assignment(db.Model, CoreMixin, Serializer):
     if 'supplement_received' in data:
       self.supplement_received = data['supplement_received']
 
-    db.session.commit()
-
-  @staticmethod
-  def terminate(data):
-    validate(data, Assignment.validation)
-    assignment = Assignment.query.get(data['id'])
-
-    if not assignment: raise FormError('assignment could not be found with the provided id')
-
-    Assignment.validate_end_date(assignment.hotspot, assignment.start_date, data['end_date'])
-    assignment.end_date = data['end_date']
-
     if 'mb_termination_aggressor' in data:
-      assignment.mb_termination_aggressor = data['mb_termination_aggressor']
-    else:
-      assignment.mb_termination_aggressor = False
-    db.session.commit()
-    return True
+      self.mb_termination_aggressor = data['mb_termination_aggressor']
+
+    if 'end_date' in data:
+      self.end_date = data['end_date']
+
 
   @staticmethod
   def active_assignment_for_hotspot(hotspot_id):
     return Assignment.query.filter_by(end_date=None, hotspot_id=hotspot_id).first()
 
   @staticmethod
-  def terminated_assignment_for_hotspot(hotspot_id):
+  def terminated_assignments_for_hotspot(hotspot_id):
     # noinspection PyUnresolvedReferences
     return Assignment.query.filter(Assignment.end_date.isnot(None),
                                    Assignment.hotspot_id == hotspot_id).all()
@@ -144,26 +136,39 @@ class Assignment(db.Model, CoreMixin, Serializer):
     return datetime.datetime.strptime(date, "%m/%d/%y")
 
   @staticmethod
-  def validate_start_date(hotspot, start_date):
-    if Assignment.active_assignment_for_hotspot(hotspot.id):
-      raise FormError("hotspot has an active assignment")
-    Assignment.validate_against_existing_assignments(hotspot, start_date)
+  def validate_dates(data):
+    start_date = Assignment.format_date(data['start_date'])
+    end_date = None
+
+    if 'end_date' in data:
+      end_date = Assignment.format_date(data['end_date'])
+      if end_date < start_date: raise FormError('assignment end date cannot be before the start date')
+
+    hotspot = Hotspot.query.get(data['hotspot_id'])
+    assignment_being_edited = data['id'] if 'id' in data else None
+
+    Assignment.validate_against_existing_assignments(hotspot, start_date, end_date, assignment_being_edited)
 
   @staticmethod
-  def validate_end_date(hotspot, start_date, end_date):
-    now = datetime.datetime.utcnow()
-    end_date = Assignment.format_date(end_date)
+  def validate_against_existing_assignments(hotspot, start_date, end_date, assignment_being_edited_id):
+    active_assignment = Assignment.active_assignment_for_hotspot(hotspot.id)
 
-    if end_date > now:
-      raise FormError("end date cannot be after today's date".format(end_date, start_date))
-    if end_date < start_date:
-      raise FormError("provided end date {} is before the assignment start date {}".format(end_date, start_date))
-    Assignment.validate_against_existing_assignments(hotspot, end_date)
+    if active_assignment:
+      active_assignment_being_edited = str(assignment_being_edited_id) == str(active_assignment.id)
 
-  @staticmethod
-  def validate_against_existing_assignments(hotspot, date):
-    for a in Assignment.terminated_assignment_for_hotspot(hotspot.id):
-      if date == a.start_date or date == a.end_date:
-        raise FormError("start date is the same as the start or end date of an existing assignment")
-      if a.start_date < date < a.end_date:
-        raise FormError("start date falls between start and end date of an existing assignment")
+      if not active_assignment_being_edited:
+        if not end_date: raise FormError('hotspot already has an active assignment - you must provide an end date')
+        if start_date > active_assignment.start_date or end_date > active_assignment.start_date:
+          raise FormError('start or end date are past the active assignment start date')
+
+    for date in [start_date, end_date]:
+      if date:
+        for a in Assignment.terminated_assignments_for_hotspot(hotspot.id):
+          if str(a.id) != str(assignment_being_edited_id): # when editing don't compare against self
+            if date == a.start_date or date == a.end_date:
+              raise FormError("start or end date is the same as start or end date of an existing assignment")
+            if a.start_date < date < a.end_date:
+              raise FormError("start or end date falls between start and end date of an existing assignment")
+            if end_date:
+              if start_date < a.start_date and end_date > a.end_date:
+                raise FormError("start and end date fully an overlap existing assignment")
