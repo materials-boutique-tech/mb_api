@@ -15,7 +15,7 @@ from db import db
 from models.User import User
 from utils.api_error import APIError
 from utils.logging_utils import init_logger, info_log
-
+from seed.seed import seed_all
 
 def create_app():
   load_dotenv()
