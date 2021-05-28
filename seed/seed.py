@@ -26,22 +26,43 @@ def seed_users():
 
 def seed_hosts():
   hosts = [
-    {"id": 16, "zip": "3220-435", "first_name": "Derk", "last_name": "Willows", "email": "dwillowsf@cisco.com",
-     "phone": "959-875-7380",
-     "street": "841 Calypso Plaza", "city": "Golubinci", "state": "Coimbra",
-     "hnt_wallet": "12n53rX6m2om5AbLswmyHwBPJY57B3wbHh", 'payment_method': 'hnt'},
-    {"id": 17, "first_name": "Neala", "last_name": "Connerly", "email": "nconnerlyg@sourceforge.net",
-     "phone": "305-540-6836", "street": "11518 Elka Street", "city": "Senhor da Serra", "state": "Coimbra",
-     "zip": "3220-435", "hnt_wallet": "1B7nt1gZVgwDfbuFtQf2TQzdgLnB85SJWU", 'payment_method': 'hnt'},
-    {"id": 18, "first_name": "Jesse", "last_name": "Trethewey", "email": "jtretheweyh@ycombinator.com",
-     "phone": "305-697-7276", "street": "562 Eagle Crest Road", "city": "Tours", "state": "Centre",
-     "zip": "37942 CEDEX 9", "hnt_wallet": "1K2nsKLh4GwJppJ85xeauyJgH88sN74cuH", 'payment_method': 'hnt'},
-    {"id": 19, "first_name": "Con", "last_name": "Fawley", "email": "cfawleyi@jalbum.net", "phone": "567-201-1990",
-     "street": "92339 Vahlen Parkway", "city": "Loivos", "state": "Vila Real", "zip": "5425-055",
-     "hnt_wallet": "15EyHpBCCRaZKP1c4qhvwn6WYL1eDz8Hr2", 'payment_method': 'hnt'},
-    {"id": 20, "first_name": "Dex", "last_name": "Sterricker", "email": "dsterrickerj@gov.uk", "phone": "530-636-0962",
-     "street": "7 Mcbride Parkway", "city": "Koffiefontein", "zip": "9987", "state": "Coimbra",
-     "hnt_wallet": "1MKqcU4yiEzSueWdGkGSyPuEcCsBHT9T17", 'payment_method': 'fiat'}]
+    {
+      "zip": "22333",
+      "first_name": "Derk",
+      "last_name": "Willows",
+      "email": "dwillowsf@cisco.com",
+      "phone": "6662228888",
+      "street": "841 Calypso Plaza",
+      "city": "Golubinci",
+      "state": "Texas",
+      "hnt_wallet": "11sDK9KUao8SudAgzRzKHQT5JjvKdG7v9bUzpu6LEb85DyYuMrg",
+      'payment_method': 'hnt'
+    },
+    {
+      "zip": "11222",
+      "first_name": "Jane",
+      "last_name": "Austin",
+      "email": "jaus@foo.com",
+      "phone": "3339991111",
+      "street": "10 Pine",
+      "city": "Boston",
+      "state": "Wyoming",
+      "hnt_wallet": "33sDK9KUao8SudAgzRzKHQT5JjvKdG7v9bUzpu6LEb85DyYuMrg",
+      'payment_method': 'fiat'
+    },
+    {
+      "zip": "11222",
+      "first_name": "Bill",
+      "last_name": "Collins",
+      "email": "b@col.com",
+      "phone": "1110002222",
+      "street": "10 Pine",
+      "city": "New York",
+      "state": "Delaware",
+      "hnt_wallet": "33sDK9KUao8SudAgzRzKHQT5JjvKdG7v9bUzpu6LEb85DyYuMrg",
+      'payment_method': 'bank_account'
+    },
+  ]
 
   for host in hosts:
     existing = Host.query.filter_by(email=host['email']).first()

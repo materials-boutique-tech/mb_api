@@ -13,7 +13,6 @@ from controllers.invoice import invoice
 from controllers.main import main
 from db import db
 from models.User import User
-from seed.seed import seed_all
 from utils.api_error import APIError
 from utils.logging_utils import init_logger, info_log
 

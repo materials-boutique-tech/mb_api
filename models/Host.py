@@ -66,6 +66,16 @@ class Host(db.Model, CoreMixin, Serializer):
             'id': self.id
             }
 
+  def eligible_to_be_referred(self, assignment_id):
+    print("\n\n\n HERE", self.host_assignments)
+    if self.host_assignments is None or not len(self.host_assignments): return True
+    if len(self.host_assignments) == 1 and \
+      self.host_assignments[0].is_active() and \
+      str(self.host_assignments[0].id) == str(assignment_id):
+      return True
+
+    return False
+
   @staticmethod
   def make_new(data):
     if Host.email_in_use(data): raise FormError('host with the provided email already exists')

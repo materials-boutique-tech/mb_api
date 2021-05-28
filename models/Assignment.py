@@ -3,6 +3,7 @@ import datetime
 from sqlalchemy.dialects.postgresql import UUID
 
 from db import db
+from models.Host import Host
 from models.Hotspot import Hotspot
 from models.mixins.CoreMixin import CoreMixin
 from utils.api_error import FormError
@@ -44,6 +45,9 @@ class Assignment(db.Model, CoreMixin, Serializer):
     'mb_termination_aggressor': [type_bool],
     'supplement_received': [type_bool],
   }
+
+  def is_active(self):
+    return self.end_date is None
 
   @staticmethod
   def all_assignments():
@@ -108,18 +112,25 @@ class Assignment(db.Model, CoreMixin, Serializer):
         raise FormError('host and referer cannot be the same person')
       self.referer_id = data['referer_id']
 
-    if 'referer_reward_percentage' in data:
+      if not 'referer_reward_percentage' in data:
+        raise FormError('referer reward percentage is required')
+
+      assignment_id = data['id'] if 'id' in data else None
+      if not Host.query.get(data['host_id']).eligible_to_be_referred(assignment_id):
+        raise FormError('a referer can only be assigned to a new host')
+
       self.referer_reward_percentage = data['referer_reward_percentage']
 
     if 'supplement_received' in data:
       self.supplement_received = data['supplement_received']
 
-    if 'mb_termination_aggressor' in data:
-      self.mb_termination_aggressor = data['mb_termination_aggressor']
+    if 'mb_termination_aggressor' in data and not 'end_date' in data:
+      raise FormError('cannot set termination aggressor without end date')
 
     if 'end_date' in data:
       self.end_date = data['end_date']
-
+      if 'mb_termination_aggressor' in data:
+        self.mb_termination_aggressor = data['mb_termination_aggressor']
 
   @staticmethod
   def active_assignment_for_hotspot(hotspot_id):
@@ -164,7 +175,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
     for date in [start_date, end_date]:
       if date:
         for a in Assignment.terminated_assignments_for_hotspot(hotspot.id):
-          if str(a.id) != str(assignment_being_edited_id): # when editing don't compare against self
+          if str(a.id) != str(assignment_being_edited_id):  # when editing don't compare against self
             if date == a.start_date or date == a.end_date:
               raise FormError("start or end date is the same as start or end date of an existing assignment")
             if a.start_date < date < a.end_date:

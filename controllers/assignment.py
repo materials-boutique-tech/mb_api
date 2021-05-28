@@ -34,18 +34,12 @@ def get_assignment():
   return Assignment.get_assignment(request.args.get('assignment_id'))
 
 
-@assignment.route('/terminate', methods=['POST'])
-@login_required
-def terminate_assignment():
-  Assignment.terminate(request.json)
-  return Response('assignment terminated', status=200, mimetype='application/json')
-
-
 @assignment.route('/add', methods=['POST'])
 @login_required
 def add_assignment():
   Assignment.add(request.json)
   return Response('assignment created', status=201, mimetype='application/json')
+
 
 @assignment.route('/update', methods=['POST'])
 @login_required
