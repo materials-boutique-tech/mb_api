@@ -45,7 +45,7 @@ class Hotspot(CoreMixin, Serializer, db.Model):
     if not Hotspot.validate_unique(data):
       raise FormError('hotspot with the provided name or net address already exists')
 
-    db.session.make_new(Hotspot(net_add=data['net_add'],
+    db.session.add(Hotspot(net_add=data['net_add'],
                                 name=data['name'],
                                 model=data['model']
                                 ))

@@ -27,7 +27,7 @@ def get_host():
 # their info but cannot set w9 status
 @host.route('/signup', methods=['POST'])
 def signup_host():
-  new_host = Host.add(request.json)
+  new_host = Host.make_new(request.json)
   db.session.add(new_host)
   db.session.commit()
   return Response('submit success', status=201, mimetype='application/json')
@@ -38,7 +38,7 @@ def signup_host():
 @login_required
 def add_host():
   data = request.json
-  new_host = Host.add(data)
+  new_host = Host.make_new(data)
 
   if 'w9_received' in data:
     new_host.w9_received = data['w9_received']
