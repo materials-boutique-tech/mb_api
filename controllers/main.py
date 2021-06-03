@@ -24,14 +24,14 @@ def seed():
 def drop_all():
   confirmation_query_param = request.args.get('confirmation')
   do_seed = request.args.get('do_seed')
-  
+
   if confirmation_query_param == 'confirm_drop_all':
     db.drop_all()
     db.create_all()
 
     if do_seed == 'true':
       seed_all()
-      return Response('dropped all tables and ran seed', status=201, mimetype='application/json')
+      return Response('dropped all tables and ran seed', status=200, mimetype='application/json')
 
-    return Response('dropped all tables', status=201, mimetype='application/json')
+    return Response('dropped all tables', status=200, mimetype='application/json')
   return Response('incorrect or missing confirmation', status=400, mimetype='application/json')
