@@ -1,7 +1,7 @@
-from flask import Blueprint, Response
+from flask import Blueprint, Response, request
 from flask_login import login_required
-
-from seed.seed import seed_users, seed_hosts, seed_hotspots
+from seed.seed import seed_all
+from db import db
 
 main = Blueprint('main', __name__)
 
@@ -15,7 +15,23 @@ def hello_world():
 @main.route('/seed', methods=['GET'])
 @login_required
 def seed():
-  seed_users()
-  seed_hosts()
-  seed_hotspots()
+  seed_all()
   return Response('seed complete', status=201, mimetype='application/json')
+
+
+@main.route('/drop-all', methods=['POST'])
+@login_required
+def drop_all():
+  confirmation_query_param = request.args.get('confirmation')
+  do_seed = request.args.get('do_seed')
+  
+  if confirmation_query_param == 'confirm_drop_all':
+    db.drop_all()
+    db.create_all()
+
+    if do_seed == 'true':
+      seed_all()
+      return Response('dropped all tables and ran seed', status=201, mimetype='application/json')
+
+    return Response('dropped all tables', status=201, mimetype='application/json')
+  return Response('incorrect or missing confirmation', status=400, mimetype='application/json')

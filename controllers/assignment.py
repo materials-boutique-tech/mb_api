@@ -6,8 +6,8 @@ from models.Assignment import Assignment
 assignment = Blueprint('assignment', __name__)
 
 
-@login_required
 @assignment.route('/', methods=['GET'])
+@login_required
 def index():
   assignments = Assignment.all_assignments()
 

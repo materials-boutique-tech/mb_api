@@ -16,7 +16,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
   end_date = db.Column(db.DateTime)
   mb_termination_aggressor = db.Column(db.Boolean)
   host_reward_percentage = db.Column(db.Integer, server_default='50', nullable=False)
-  referer_reward_percentage = db.Column(db.Integer, server_default='5')
+  referer_reward_percentage = db.Column(db.Integer)
   supplement_received = db.Column(db.Boolean, server_default='false', nullable=False)
 
   host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'), nullable=False)
