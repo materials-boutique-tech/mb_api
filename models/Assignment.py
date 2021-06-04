@@ -149,11 +149,12 @@ class Assignment(db.Model, CoreMixin, Serializer):
   @staticmethod
   def validate_dates(data):
     start_date = Assignment.format_date(data['start_date'])
-    end_date = None
+    end_date = Assignment.end_date
 
     if 'end_date' in data:
       end_date = Assignment.format_date(data['end_date'])
-      if end_date < start_date: raise FormError('assignment end date cannot be before the start date')
+
+    if end_date and (end_date < start_date): raise FormError('assignment end date cannot be before the start date')
 
     hotspot = Hotspot.query.get(data['hotspot_id'])
     assignment_being_edited = data['id'] if 'id' in data else None
@@ -169,7 +170,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
 
       if not active_assignment_being_edited:
         if not end_date: raise FormError('hotspot already has an active assignment - you must provide an end date')
-        if start_date > active_assignment.start_date or end_date > active_assignment.start_date:
+        if start_date >= active_assignment.start_date or end_date >= active_assignment.start_date:
           raise FormError('start or end date are past the active assignment start date')
 
     for date in [start_date, end_date]:
@@ -182,4 +183,4 @@ class Assignment(db.Model, CoreMixin, Serializer):
               raise FormError("start or end date falls between start and end date of an existing assignment")
             if end_date:
               if start_date < a.start_date and end_date > a.end_date:
-                raise FormError("start and end date fully an overlap existing assignment")
+                raise FormError("start and end date fully overlap an existing assignment")

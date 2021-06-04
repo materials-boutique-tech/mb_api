@@ -77,7 +77,6 @@ def type_bool(field_name, data):
     return "{} should be a bool".format(field_name)
 
 
-# TODO: validators using regex need to compare the fullmatch() to the value, not just check whether fullmatch() passes
 def date_string_format(field_name, data):
   if not re.fullmatch('^\d{2}/\d{2}/\d{2}', data[field_name]):
     return "{} should have format mm/dd/yy".format(field_name)
@@ -114,4 +113,4 @@ def type_hotspot_name(field_name, data):
     return "{} invalid - should contain only lowercase letters and underscore".format(field_name)
   if not len(re.findall('_', data[field_name])) == 2:
     return "{} invalid - should contain three words separated by underscores".format(field_name)
- 
+
