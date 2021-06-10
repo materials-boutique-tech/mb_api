@@ -20,7 +20,7 @@ def seed():
   return Response('seed complete', status=201, mimetype='application/json')
 
 
-@main.route('/drop-all', methods=['POST'])
+@main.route('/drop-all', methods=['GET'])
 @login_required
 def drop_all():
   confirmation_query_param = request.args.get('confirmation')
