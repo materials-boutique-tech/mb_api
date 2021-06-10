@@ -51,6 +51,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
 
   def is_active(self):
     return self.end_date is None
+    # test
 
   @staticmethod
   def all_assignments():
