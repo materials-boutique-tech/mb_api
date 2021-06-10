@@ -34,6 +34,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
       'id': self.id,
     }
 
+  # TODO: validate for sum host/referer reward % <=100
   validation = {
     'host_id': [required_length(36)],
     'referer_id': [required_length(36)],
@@ -58,7 +59,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
     return db.session.execute(query).all()
 
   @staticmethod
-  def get_assignment(a_id):
+  def by_id(a_id):
     a = Assignment.query.get(a_id)
     res = a.serialize()
 
@@ -94,7 +95,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
     assignment = Assignment.query.get(data['id'])
 
     validate(data, Assignment.validation)
-    Assignment.validate_dates(data)
+    Assignment.validate_dates(data, assignment)
 
     # noinspection PyArgumentList
     assignment.start_date = data['start_date']
@@ -107,7 +108,7 @@ class Assignment(db.Model, CoreMixin, Serializer):
     db.session.commit()
 
   def set_optional_fields(self, data):
-    if 'referer_id' in data:
+    if ('referer_id' in data) and data['referer_id'] is not None:
       if data['referer_id'] == data['host_id']:
         raise FormError('host and referer cannot be the same person')
       self.referer_id = data['referer_id']
@@ -115,8 +116,8 @@ class Assignment(db.Model, CoreMixin, Serializer):
       if not 'referer_reward_percentage' in data:
         raise FormError('referer reward percentage is required')
 
-      assignment_id = data['id'] if 'id' in data else None
-      if not Host.query.get(data['host_id']).eligible_to_be_referred(assignment_id):
+      assignment_being_edited_id = data['id'] if 'id' in data else None
+      if not Host.query.get(data['host_id']).eligible_to_be_referred(assignment_being_edited_id):
         raise FormError('a referer can only be assigned to a new host')
 
       self.referer_reward_percentage = data['referer_reward_percentage']
@@ -147,12 +148,13 @@ class Assignment(db.Model, CoreMixin, Serializer):
     return datetime.datetime.strptime(date, "%m/%d/%y")
 
   @staticmethod
-  def validate_dates(data):
+  def validate_dates(data, assignment=None):
     start_date = Assignment.format_date(data['start_date'])
-    end_date = Assignment.end_date
 
     if 'end_date' in data:
       end_date = Assignment.format_date(data['end_date'])
+    else:
+      end_date = assignment and assignment.end_date
 
     if end_date and (end_date < start_date): raise FormError('assignment end date cannot be before the start date')
 

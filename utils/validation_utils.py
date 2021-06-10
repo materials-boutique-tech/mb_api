@@ -113,4 +113,3 @@ def type_hotspot_name(field_name, data):
     return "{} invalid - should contain only lowercase letters and underscore".format(field_name)
   if not len(re.findall('_', data[field_name])) == 2:
     return "{} invalid - should contain three words separated by underscores".format(field_name)
-

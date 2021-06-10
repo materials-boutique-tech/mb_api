@@ -10,7 +10,6 @@ class Hotspot(CoreMixin, Serializer, db.Model):
   net_add = db.Column(db.String(120), unique=True, nullable=False)
   model = db.Column(db.String(120), nullable=False)
   name = db.Column(db.String(100), unique=True, nullable=False)
-  invoices = db.relationship('Invoice', backref='hotspot')
   assignments = db.relationship('Assignment', backref='hotspot')
 
   validation = {
@@ -20,11 +19,12 @@ class Hotspot(CoreMixin, Serializer, db.Model):
   }
 
   def serialize(self):
-    return {'name': self.name,
-            'id': self.id,
-            'net_add': self.net_add,
-            'model': self.model,
-            }
+    return {
+      'name': self.name,
+      'id': self.id,
+      'net_add': self.net_add,
+      'model': self.model,
+    }
 
   @staticmethod
   def unassigned():
@@ -46,9 +46,9 @@ class Hotspot(CoreMixin, Serializer, db.Model):
       raise FormError('hotspot with the provided name or net address already exists')
 
     db.session.add(Hotspot(net_add=data['net_add'],
-                                name=data['name'],
-                                model=data['model']
-                                ))
+                           name=data['name'],
+                           model=data['model']
+                           ))
     db.session.commit()
 
   @staticmethod

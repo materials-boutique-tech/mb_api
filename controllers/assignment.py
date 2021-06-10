@@ -31,7 +31,7 @@ def index():
 @assignment.route('/assignment', methods=['GET'])
 @login_required
 def get_assignment():
-  return Assignment.get_assignment(request.args.get('assignment_id'))
+  return Assignment.by_id(request.args.get('assignment_id'))
 
 
 @assignment.route('/add', methods=['POST'])

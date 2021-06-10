@@ -29,7 +29,7 @@ class Host(db.Model, CoreMixin, Serializer):
 
   host_assignments = db.relationship("Assignment", backref="host", foreign_keys='Assignment.host_id')
   referral_assignments = db.relationship("Assignment", backref="referer", foreign_keys='Assignment.referer_id')
-  invoices = db.relationship('Invoice', backref='host')
+  host_invoices = db.relationship('HostInvoice', backref='host')
 
   validation = {
     'first_name': [type_name],
@@ -66,12 +66,14 @@ class Host(db.Model, CoreMixin, Serializer):
             'id': self.id
             }
 
-  def eligible_to_be_referred(self, assignment_id):
-    print("\n\n\n HERE", self.host_assignments)
+  def eligible_to_be_referred(self, assignment_being_edited_id):
+    # if the host has never had an assignment
     if self.host_assignments is None or not len(self.host_assignments): return True
+
+    # if the host being referred has only one active assignment and it is the one being edited
     if len(self.host_assignments) == 1 and \
       self.host_assignments[0].is_active() and \
-      str(self.host_assignments[0].id) == str(assignment_id):
+      str(self.host_assignments[0].id) == str(assignment_being_edited_id):
       return True
 
     return False
@@ -115,7 +117,7 @@ class Host(db.Model, CoreMixin, Serializer):
     db.session.commit()
 
   @staticmethod
-  def show(host_id):
+  def by_id(host_id):
     return Host.query.get(host_id)
 
   @staticmethod

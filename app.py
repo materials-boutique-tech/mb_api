@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from flask_apscheduler import APScheduler
 from flask_cors import CORS
 from flask_login import LoginManager
 
@@ -14,8 +15,8 @@ from controllers.main import main
 from db import db
 from models.User import User
 from utils.api_error import APIError
-from utils.logging_utils import init_logger, info_log
-from seed.seed import seed_all
+from utils.invoice_utils import generate_invoices_job
+
 
 def create_app():
   load_dotenv()
@@ -25,18 +26,18 @@ def create_app():
   _app.config.from_object(config)
   login_manager.init_app(_app)
   CORS(_app, supports_credentials=True, origins=os.environ['CORS_ORIGINS'])
-  init_logger(_app)
-  info_log("starting app with config: {}".format(config))
+  print("starting app with config: {}".format(config))
 
   # set up the scheduler for running the invoice generation job
-  # scheduler = APScheduler()
-  # scheduler.api_enabled = True
-  # scheduler.init_app(_app)
-  # scheduler.start()
-  # scheduler.add_job(id='invoice_task_id',
-  #                   func=generate_invoices_job(_app),
-  #                   trigger='interval',
-  #                   seconds=30)  # TODO: change this to something less frequent
+  scheduler = APScheduler()
+  scheduler.api_enabled = True
+  scheduler.init_app(_app)
+  scheduler.start()
+  scheduler.add_job(id='invoice_task_id',
+                    func=generate_invoices_job(_app),
+                    trigger='interval',
+                    seconds=600  # 10 minutes
+                    )
 
   # set up the user loader for flask_login
   @login_manager.user_loader
@@ -65,9 +66,7 @@ def handle_exception(err):
 
 with app.app_context():
   db.init_app(app)
-  # db.drop_all()
   db.create_all()
-  # seed_all()
 
 if __name__ == '__main__':
   app.run(port=5000)

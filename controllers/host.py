@@ -19,8 +19,8 @@ def index():
 # admin route for getting a single host
 @host.route('/host', methods=['GET'])
 @login_required
-def get_host():
-  return Host.show(request.args.get('host_id')).serialize()
+def show():
+  return Host.by_id(request.args.get('host_id')).serialize()
 
 
 # public facing signup route (no login required) - allows a host to enter
