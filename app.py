@@ -73,7 +73,7 @@ def drop_tables():
 
 with app.app_context():
   db.init_app(app)
-  drop_tables()
+  # drop_tables()
   db.create_all()
 
 if __name__ == '__main__':
