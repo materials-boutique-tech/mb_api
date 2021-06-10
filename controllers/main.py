@@ -21,7 +21,7 @@ def seed():
 
 
 @main.route('/drop-all', methods=['GET'])
-@login_required
+# @login_required
 def drop_all():
   confirmation_query_param = request.args.get('confirmation')
   do_seed = request.args.get('do_seed')

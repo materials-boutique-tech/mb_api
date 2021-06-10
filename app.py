@@ -16,7 +16,9 @@ from db import db
 from models.User import User
 from utils.api_error import APIError
 from utils.invoice_utils import delete_unpaid_host_invoices, delete_mining_invoices
-from utils.invoice_utils import generate_invoices_job
+# from utils.invoice_utils import generate_invoices_job
+from utils import logging_utils
+from seed.seed import seed_all
 
 
 def create_app():
@@ -30,15 +32,15 @@ def create_app():
   print("starting app with config: {}".format(config))
 
   # set up the scheduler for running the invoice generation job
-  scheduler = APScheduler()
-  scheduler.api_enabled = True
-  scheduler.init_app(_app)
-  scheduler.start()
-  scheduler.add_job(id='invoice_task_id',
-                    func=generate_invoices_job(_app),
-                    trigger='interval',
-                    seconds=600  # 10 minutes
-                    )
+  # scheduler = APScheduler()
+  # scheduler.api_enabled = True
+  # scheduler.init_app(_app)
+  # scheduler.start()
+  # scheduler.add_job(id='invoice_task_id',
+  #                   func=generate_invoices_job(_app),
+  #                   trigger='interval',
+  #                   seconds=600  # 10 minutes
+  #                   )
 
   # set up the user loader for flask_login
   @login_manager.user_loader
@@ -73,8 +75,8 @@ def drop_tables():
 
 with app.app_context():
   db.init_app(app)
-  # drop_tables()
   db.create_all()
+
 
 if __name__ == '__main__':
   app.run(port=5000)
