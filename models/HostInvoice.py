@@ -6,7 +6,7 @@ from utils.request_utils import Serializer
 
 
 class HostInvoice(CoreMixin, Serializer, db.Model):
-  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'), nullable=False)
+  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
   start_date = db.Column(db.DateTime, nullable=False)
   end_date = db.Column(db.DateTime, nullable=False)
   hnt_owed = db.Column(db.Float, nullable=False)

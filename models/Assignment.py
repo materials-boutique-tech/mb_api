@@ -19,11 +19,9 @@ class Assignment(db.Model, CoreMixin, Serializer):
   referer_reward_percentage = db.Column(db.Integer)
   supplement_received = db.Column(db.Boolean, server_default='false', nullable=False)
 
-  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'), nullable=False)
-  hotspot_id = db.Column(UUID(as_uuid=True), db.ForeignKey('hotspot.id'), nullable=False)
+  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
+  hotspot_id = db.Column(UUID(as_uuid=True), db.ForeignKey('hotspot.id'))
   referer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
-
-  mining_invoices = db.relationship('MiningInvoice', cascade="all,delete")
 
   def serialize(self):
     return {

@@ -11,9 +11,9 @@ REFERER = 'referer'
 
 
 class MiningInvoice(CoreMixin, Serializer, db.Model):
-  assignment_id = db.Column(UUID(as_uuid=True), db.ForeignKey('assignment.id'), nullable=False)
+  assignment_id = db.Column(UUID(as_uuid=True), db.ForeignKey('assignment.id'))
   host_invoice_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host_invoice.id'))
-  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'), nullable=False)
+  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
   host_role = db.Column(db.String(100))
   reward_percentage = db.Column(db.Integer)
   start_date = db.Column(db.DateTime, nullable=False)
