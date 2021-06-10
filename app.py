@@ -67,10 +67,10 @@ def handle_exception(err):
   return err_msg, err.code
 
 
-def drop_tables():
-  delete_mining_invoices()
-  delete_unpaid_host_invoices()
-  db.drop_all()
+# def drop_tables():
+#   delete_mining_invoices()
+#   delete_unpaid_host_invoices()
+#   db.drop_all()
 
 
 with app.app_context():
