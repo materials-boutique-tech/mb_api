@@ -27,6 +27,8 @@ def drop_all():
   do_seed = request.args.get('do_seed')
 
   if confirmation_query_param == 'confirm_drop_all':
+    delete_mining_invoices()
+    delete_unpaid_host_invoices()
     db.drop_all()
     db.create_all()
 
