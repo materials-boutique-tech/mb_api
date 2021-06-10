@@ -23,6 +23,8 @@ class Assignment(db.Model, CoreMixin, Serializer):
   hotspot_id = db.Column(UUID(as_uuid=True), db.ForeignKey('hotspot.id'))
   referer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
 
+  mining_invoices = db.relationship('MiningInvoice', cascade="all,delete")
+
   def serialize(self):
     return {
       'start_date': self.start_date,
