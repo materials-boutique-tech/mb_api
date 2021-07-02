@@ -13,7 +13,7 @@ class Hotspot(CoreMixin, Serializer, db.Model):
   assignments = db.relationship('Assignment', backref='hotspot')
 
   validation = {
-    'net_add': [required_length(51)],
+    'net_add': [required_length(52)],
     'model': [min_length(3)],
     'name': [type_hotspot_name, min_length(15)],
   }
