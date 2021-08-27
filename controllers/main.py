@@ -1,6 +1,8 @@
+import os
+
 from flask import Blueprint, Response, request
 from flask_login import login_required
-from utils.invoice_utils import delete_mining_invoices,delete_unpaid_host_invoices
+
 from db import db
 from seed.seed import seed_all
 
@@ -21,20 +23,19 @@ def seed():
 
 
 @main.route('/drop-all', methods=['GET'])
-# @login_required
+@login_required
 def drop_all():
-  confirmation_query_param = request.args.get('confirmation')
-  do_seed = request.args.get('do_seed')
+  if os.environ['APP_SETTINGS'] != 'development':
+    confirmation_query_param = request.args.get('confirmation')
+    do_seed = request.args.get('do_seed')
 
-  if confirmation_query_param == 'confirm_drop_all':
-    # delete_mining_invoices()
-    # delete_unpaid_host_invoices()
-    db.drop_all()
-    db.create_all()
+    if confirmation_query_param == 'confirm_drop_all':
+      db.drop_all()
+      db.create_all()
 
-    if do_seed == 'true':
-      seed_all()
-      return Response('dropped all tables and ran seed', status=200, mimetype='application/json')
+      if do_seed == 'true':
+        seed_all()
+        return Response('dropped all tables and ran seed', status=200, mimetype='application/json')
 
-    return Response('dropped all tables', status=200, mimetype='application/json')
-  return Response('incorrect or missing confirmation', status=400, mimetype='application/json')
+      return Response('dropped all tables', status=200, mimetype='application/json')
+    return Response('incorrect or missing confirmation', status=400, mimetype='application/json')
