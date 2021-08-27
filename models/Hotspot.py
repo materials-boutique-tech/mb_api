@@ -2,7 +2,7 @@ from db import db
 from models.mixins.CoreMixin import CoreMixin
 from utils.api_error import FormError
 from utils.request_utils import Serializer
-from utils.validation_utils import min_length, required_length, type_hotspot_name
+from utils.validation_utils import min_length, max_length, type_hotspot_name
 from utils.validation_utils import validate
 
 
@@ -13,7 +13,7 @@ class Hotspot(CoreMixin, Serializer, db.Model):
   assignments = db.relationship('Assignment', backref='hotspot')
 
   validation = {
-    'net_add': [required_length(52)],
+    'net_add': [min_length(50), max_length(52)],
     'model': [min_length(3)],
     'name': [type_hotspot_name, min_length(15)],
   }

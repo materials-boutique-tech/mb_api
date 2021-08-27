@@ -86,6 +86,7 @@ def invoices_for_assignment(assignment):
 
 def create_mining_invoice(assignment, start_date, end_date):
   hnt_mined_in_range = helium_rewards_api_call(assignment, start_date, end_date)
+  helium_api_call_v2(assignment, start_date, end_date)
 
   def make_invoice(host_role, reward_percentage):
     return MiningInvoice(
@@ -113,6 +114,37 @@ def helium_rewards_api_call(assignment, range_start, range_end):
   path = path.format(assignment.hotspot.net_add, range_start.isoformat(), range_end.isoformat())
   response = requests.get(path)
   return json.loads(response.content)['data']['total']
+
+
+def helium_api_call_v2(assignment, range_start, range_end):
+  _path = "https://api.helium.io/v1/hotspots/{}/rewards?min_time={}&max_time={}"
+  _path = _path.format(assignment.hotspot.net_add, range_start.isoformat(), range_end.isoformat())
+
+  res = []
+
+  cursor = 'unset'
+
+  while cursor:
+    path = _path
+
+    if cursor and (cursor != 'unset'):
+      path += '&cursor={}'.format(cursor)
+
+    response = requests.get(path)
+    content = json.loads(response.content)
+    res.extend(content['data'])
+
+    cursor = 'cursor' in content
+
+    if cursor:
+      cursor = content['cursor']
+
+  total = 0
+
+  for record in res:
+    total += record['amount']
+
+  return total/100000000
 
 
 def start_day(_date):
@@ -153,32 +185,3 @@ def date_ranges(start_date, end_date):
     last_bin_end = end
 
   return ranges
-
-# TODO: improve this to look for any overlapping invoice
-# make sure an invoice does not exist for the same hotspot for the same start date
-# if MiningInvoice.query.filter_by(hotspot_id=hotspot_id, start_date=start_date).first():
-#   return
-# other_rewards_api_call(hotspot, start_date, end_date)
-# def create_mining_invoice (assignment, start_date, end_date):
-#   response = helium_rewards_api_call(assignment, start_date, end_date)
-#   hnt_mined_in_range = response['data']['total']
-#
-#   def make_invoice(host_role,reward_percentage):
-#     return MiningInvoice(
-#             assignment_id=assignment.id,
-#             host_id=assignment.host_id,
-#             hotspot_id=assignment.hotspot_id,
-#             host_role=host_role,
-#             start_date=start_date,
-#             end_date=end_date,
-#             hnt_mined=hnt_mined_in_range,
-#             hnt_owed=hnt_mined_in_range * (reward_percentage / 100),
-#             reward_percentage=assignment.host_reward_percentage  # record this as it could change in the future
-#             )
-#
-#   db.session.add(make_invoice('host',assignment.host_reward_percentage))
-#
-#   if assignment.referer_id:
-#     db.session.add(make_invoice('referer', assignment.referer_reward_percentage))
-#
-#   db.session.commit()

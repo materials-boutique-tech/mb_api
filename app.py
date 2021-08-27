@@ -2,7 +2,6 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
-from flask_apscheduler import APScheduler
 from flask_cors import CORS
 from flask_login import LoginManager
 
@@ -15,10 +14,12 @@ from controllers.main import main
 from db import db
 from models.User import User
 from utils.api_error import APIError
-from utils.invoice_utils import delete_unpaid_host_invoices, delete_mining_invoices
+
+
+# from utils.invoice_utils import delete_unpaid_host_invoices, delete_mining_invoices
 # from utils.invoice_utils import generate_invoices_job
-from utils import logging_utils
-from seed.seed import seed_all
+# from utils import logging_utils
+# from seed.seed import seed_all
 
 
 def create_app():
@@ -67,16 +68,9 @@ def handle_exception(err):
   return err_msg, err.code
 
 
-# def drop_tables():
-#   delete_mining_invoices()
-#   delete_unpaid_host_invoices()
-#   db.drop_all()
-
-
 with app.app_context():
   db.init_app(app)
   db.create_all()
-
 
 if __name__ == '__main__':
   app.run(port=5000)

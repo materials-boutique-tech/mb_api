@@ -42,7 +42,7 @@ class Host(db.Model, CoreMixin, Serializer):
     'zip': [type_zip_code],
     'w9_received': [type_bool],
     'payment_method': [one_of([HNT, BANK_ACCOUNT, VENMO])],
-    'hnt_wallet': [required_length(51)],
+    'hnt_wallet': [min_length(50), max_length(52)],
     'bank_account_number': [min_length(6), max_length(24)],
     'bank_routing_number': [min_length(6), max_length(24)],
     'venmo_handle': [],
