@@ -1,7 +1,11 @@
 import re
 
 from utils.api_error import FormError
+# the field must be present in json but can contain any value
+REQUIRED = 'REQUIRED'
 
+# the field must be present in json and contain a value that is truthy
+REQUIRED_W_VAL = 'REQUIRED_W_VAL'
 
 # validators used in model CRUD methods
 def validate(data, validation):
@@ -9,9 +13,17 @@ def validate(data, validation):
 
   for field_name in validation:
     field_validation = validation[field_name]
+
+    if (not field_name in data) and REQUIRED in field_validation:
+      raise FormError('{} is a required field'.format(field_name))
+
+    if ((not field_name in data) or not data[field_name]) and REQUIRED_W_VAL in field_validation:
+      raise FormError('{} is a required field and must have a truthy value'.format(field_name))
+
     if (not field_name in data) or (data[field_name] is None): continue
 
     for validator in field_validation:
+      if validator == REQUIRED or validator == REQUIRED_W_VAL: continue
       err_msg = validator(field_name, data)
       if err_msg: errors.append(err_msg)
 

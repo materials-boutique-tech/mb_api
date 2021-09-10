@@ -8,7 +8,7 @@ from models.Hotspot import Hotspot
 from models.mixins.CoreMixin import CoreMixin
 from utils.api_error import FormError
 from utils.request_utils import Serializer
-from utils.validation_utils import validate, number_in_range, required_length, type_bool, date_string_format
+from utils.validation_utils import validate, number_in_range, required_length, type_bool, date_string_format,REQUIRED, REQUIRED_W_VAL
 
 
 class Assignment(db.Model, CoreMixin, Serializer):
@@ -19,8 +19,8 @@ class Assignment(db.Model, CoreMixin, Serializer):
   referer_reward_percentage = db.Column(db.Integer)
   supplement_received = db.Column(db.Boolean, server_default='false', nullable=False)
 
-  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
-  hotspot_id = db.Column(UUID(as_uuid=True), db.ForeignKey('hotspot.id'))
+  host_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'), nullable=False)
+  hotspot_id = db.Column(UUID(as_uuid=True), db.ForeignKey('hotspot.id'), nullable=False)
   referer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('host.id'))
 
   mining_invoices = db.relationship('MiningInvoice', cascade="all,delete")
@@ -38,13 +38,13 @@ class Assignment(db.Model, CoreMixin, Serializer):
 
   # TODO: validate for sum host/referer reward % <=100
   validation = {
-    'host_id': [required_length(36)],
+    'host_id': [REQUIRED_W_VAL, required_length(36)],
     'referer_id': [required_length(36)],
-    'hotspot_id': [required_length(36)],
-    'start_date': [date_string_format],
+    'hotspot_id': [REQUIRED_W_VAL, required_length(36)],
+    'start_date': [REQUIRED_W_VAL, date_string_format],
     'end_date': [date_string_format],
     'referer_reward_percentage': [number_in_range(1, 100)],
-    'host_reward_percentage': [number_in_range(1, 100)],
+    'host_reward_percentage': [REQUIRED_W_VAL, number_in_range(1, 100)],
     'mb_termination_aggressor': [type_bool],
     'supplement_received': [type_bool],
   }
@@ -111,19 +111,22 @@ class Assignment(db.Model, CoreMixin, Serializer):
     db.session.commit()
 
   def set_optional_fields(self, data):
-    if ('referer_id' in data) and data['referer_id'] is not None:
-      if data['referer_id'] == data['host_id']:
-        raise FormError('host and referer cannot be the same person')
-      self.referer_id = data['referer_id']
+    if 'referer_id' in data:
+      if data['referer_id'] is not None:
+        if data['referer_id'] == data['host_id']:
+          raise FormError('host and referer cannot be the same person')
+        self.referer_id = data['referer_id']
 
-      if not 'referer_reward_percentage' in data:
-        raise FormError('referer reward percentage is required')
+        if not 'referer_reward_percentage' in data or not data['referer_reward_percentage']:
+          raise FormError('referer reward percentage is required if assigning a referer')
 
-      assignment_being_edited_id = data['id'] if 'id' in data else None
-      if not Host.query.get(data['host_id']).eligible_to_be_referred(assignment_being_edited_id):
-        raise FormError('a referer can only be assigned to a new host')
+        assignment_being_edited_id = data['id'] if 'id' in data else None
+        if not Host.query.get(data['host_id']).eligible_to_be_referred(assignment_being_edited_id):
+          raise FormError('a referer can only be assigned to a new host')
 
-      self.referer_reward_percentage = data['referer_reward_percentage']
+        self.referer_reward_percentage = data['referer_reward_percentage']
+      else:
+        self.referer_id = None
 
     if 'supplement_received' in data:
       self.supplement_received = data['supplement_received']
@@ -172,6 +175,9 @@ class Assignment(db.Model, CoreMixin, Serializer):
 
     if active_assignment:
       active_assignment_being_edited = str(assignment_being_edited_id) == str(active_assignment.id)
+      print("the hotsiopt id", hotspot.id)
+      print("\nTHE assifgnment being edited id ",str(assignment_being_edited_id))
+      print("\nTHE active id ",      str(active_assignment.id))
 
       if not active_assignment_being_edited:
         if not end_date: raise FormError('hotspot already has an active assignment - you must provide an end date')
